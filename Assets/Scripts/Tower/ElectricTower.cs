@@ -16,8 +16,10 @@ public class ElectricTower : MonoBehaviour, ITowerUpgrade
 
     [Header("Lightning Visual")]
     [SerializeField] private LightningEffectPool lightningPool;
-    private float attackTimer;
+    private float attackTimer = 0;
     private TowerEnemyFinder enemyFinder;
+
+    public float AttackRange => attackRange;
 
     private void Awake()
     {
@@ -64,7 +66,7 @@ public class ElectricTower : MonoBehaviour, ITowerUpgrade
             if (currentTarget == null)
                 break;
             
-            EnemyHP enemyHP = currentTarget.GetComponent<EnemyHP>();
+            EnemyHP enemyHP = currentTarget.Health;
 
             if (!enemyHP.IsAlive) break;
            
@@ -80,59 +82,23 @@ public class ElectricTower : MonoBehaviour, ITowerUpgrade
 
             startPosition = targetPosition;
 
-            currentTarget = FindNextTarget(
+            currentTarget = Utilities.FindNextTarget(
                 targetPosition,
-                hitEnemies
+                hitEnemies,
+                chainRange
             );
 
             damage *= 1f - damageFalloff;
+
+            SoundFXManager.Instance.PlaySound(SoundFXManager.Instance.Library.electric, 0.75f, 0.2f);
         }
-    }
-
-    private Enemy FindNextTarget(
-        Vector3 position,
-        HashSet<Enemy> hitEnemies)
-    {
-        Enemy nearest = null;
-        float nearestDistance = chainRange;
-
-        Enemy[] enemies = FindObjectsByType<Enemy>();
-
-        foreach (Enemy enemy in enemies)
-        {   
-            if (enemy == null)
-                continue;
-
-            EnemyHP enemyHP = enemy.GetComponent<EnemyHP>();
-
-            if (enemyHP == null || !enemyHP.IsAlive)
-                continue;
-
-            if (enemy == null ||
-                !enemyHP.IsAlive ||
-                hitEnemies.Contains(enemy))
-                continue;
-
-            float distance = Vector3.Distance(
-                position,
-                enemy.transform.position
-            );
-
-            if (distance <= nearestDistance)
-            {
-                nearestDistance = distance;
-                nearest = enemy;
-            }
-        }
-
-        return nearest;
     }
 
     public void Upgrade()
     {
         attackRange += 0.5f;
-        attackCooldown -= 0.25f;
-        baseDamage *= 1.2f;
+        attackCooldown = Mathf.Max(0.1f, attackCooldown - 0.35f);
+        baseDamage *= 1.4f;
 
         maxTargets++;
 

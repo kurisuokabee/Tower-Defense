@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoomerangProjectile : MonoBehaviour
+public class BoomerangProjectile : MonoBehaviour, IPooledObject
 {
     [Header("Movement")]
     [SerializeField] private float flightDuration = 1.2f;
@@ -16,24 +16,31 @@ public class BoomerangProjectile : MonoBehaviour
     private float damage;
     private float timer;
 
+    private PooledObject pooledObject;
     private readonly HashSet<Enemy> hitEnemies = new();
+    private readonly List<Enemy> enemyBuffer = new List<Enemy>();
+
+    private void Awake()
+    {
+        pooledObject = GetComponent<PooledObject>();
+    }
 
     public void Initialize(
-    Vector3 direction,
-    float projectileDamage,
-    float targetDistance)
+        Vector3 direction,
+        float projectileDamage,
+        float targetDistance)
     {
         startPosition = transform.position;
 
         direction.z = 0f;
         forwardDirection = direction.normalized;
 
-        // Travel based on the target's distance.
         flightDistance = targetDistance;
-
         damage = projectileDamage;
         timer = 0f;
+
         hitEnemies.Clear();
+        transform.rotation = Quaternion.identity;
     }
 
     private void Update()
@@ -44,6 +51,7 @@ public class BoomerangProjectile : MonoBehaviour
     private void BoomerangMovement()
     {
         timer += Time.deltaTime;
+
         float t = Mathf.Clamp01(timer / flightDuration);
 
         Vector3 sideDirection = new Vector3(
@@ -52,48 +60,62 @@ public class BoomerangProjectile : MonoBehaviour
             0f
         );
 
-        float forwardDistance =
-            flightDistance * Mathf.Sin(t * Mathf.PI);
+        float forwardDistance = flightDistance * Mathf.Sin(t * Mathf.PI);
+        float sidewaysDistance = curveWidth * Mathf.Sin(t * Mathf.PI * 2f);
 
-        float sidewaysDistance =
-            curveWidth * Mathf.Sin(t * Mathf.PI * 2f);
-
-        transform.position =
-            startPosition
+        transform.position = startPosition
             + forwardDirection * forwardDistance
             + sideDirection * sidewaysDistance;
 
-        transform.Rotate(
-            0f, 0f, rotationSpeed * Time.deltaTime
-        );
+        transform.Rotate(0f, 0f, rotationSpeed * Time.deltaTime);
 
         CheckEnemyHits();
 
         if (t >= 1f)
-            Destroy(gameObject);
+            ReturnToPool();
     }
 
+    
     private void CheckEnemyHits()
     {
-        Enemy[] enemies =
-            FindObjectsByType<Enemy>();
+        EnemySpawner enemySpawner = EnemySpawner.Instance;
 
-        foreach (Enemy enemy in enemies)
-        {   
-            EnemyHP enemyHP = enemy.GetComponent<EnemyHP>();
-            
-            if (enemy == null ||
-                !enemyHP.IsAlive ||
-                hitEnemies.Contains(enemy))
+        if (enemySpawner == null)
+            return;
+
+        enemyBuffer.Clear();
+        enemyBuffer.AddRange(enemySpawner.ActiveEnemies);
+
+        float hitRadiusSqr = hitRadius * hitRadius;
+        Vector3 position = transform.position;
+
+        foreach (Enemy enemy in enemyBuffer)
+        {
+            if (enemy == null || hitEnemies.Contains(enemy))
                 continue;
 
-            if (Vector3.Distance(
-                transform.position,
-                enemy.transform.position) <= hitRadius)
+            EnemyHP enemyHP = enemy.Health;
+
+            if (enemyHP == null || !enemyHP.IsAlive)
+                continue;
+
+            float distanceSqr =
+                (position - enemy.transform.position).sqrMagnitude;
+
+            if (distanceSqr <= hitRadiusSqr)
             {
-                enemyHP.TakeDamage(damage);
                 hitEnemies.Add(enemy);
+                enemyHP.TakeDamage(damage);
             }
         }
+    }
+
+
+    public void ReturnToPool()
+    {
+        if (pooledObject != null)
+            pooledObject.ReturnToPool();
+        else if (ObjectPoolManager.Instance != null)
+            ObjectPoolManager.Instance.ReturnObject(gameObject);
     }
 }

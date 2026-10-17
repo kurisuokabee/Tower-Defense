@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Ogre Tank
   m_EditorClassIdentifier: Assembly-CSharp::EnemyType
   enemyName: Ogre Tank
-  maxHealth: 250
-  moveSpeed: 1.2
+  maxHealth: 650
+  moveSpeed: 1.1
   damage: 15
-  goldReward: 50
+  goldReward: 60
   enemySprite: {fileID: 21300000, guid: cc973a61f7963ff4aa6f0ef2e86c4155, type: 3}

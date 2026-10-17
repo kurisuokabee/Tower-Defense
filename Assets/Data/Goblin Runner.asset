@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Goblin Runner
   m_EditorClassIdentifier: Assembly-CSharp::EnemyType
   enemyName: Goblin Runner
-  maxHealth: 40
-  moveSpeed: 5
-  damage: 5
-  goldReward: 35
+  maxHealth: 100
+  moveSpeed: 6
+  damage: 8
+  goldReward: 45
   enemySprite: {fileID: 21300000, guid: 987df68ad37cf1041b746a035b045430, type: 3}

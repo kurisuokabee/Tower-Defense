@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class TowerPlacementManager : MonoBehaviour
@@ -77,18 +78,27 @@ public class TowerPlacementManager : MonoBehaviour
         if (prefab == null)
             return;
 
-        if (CurrencyManager.Instance == null ||
-            !CurrencyManager.Instance.CanAfford(cost))
-            return;
-
         if (isPlacing)
             CancelPlacement();
 
         selectedPrefab = prefab;
-        selectedTowerCost = cost;
+
+        selectedTowerCost = TowerCostManager.Instance != null
+            ? TowerCostManager.Instance.GetTowerCost(prefab, cost)
+            : cost;
+
+        if (CurrencyManager.Instance == null ||
+            !CurrencyManager.Instance.CanAfford(selectedTowerCost))
+        {
+            selectedPrefab = null;
+            selectedTowerCost = 0;
+            return;
+        }
 
         CreatePreview();
         isPlacing = true;
+
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     private void CreatePreview()
@@ -200,6 +210,10 @@ public class TowerPlacementManager : MonoBehaviour
         Vector3 position = previewObject.transform.position;
 
         Instantiate(selectedPrefab, position, Quaternion.identity);
+
+        SoundFXManager.Instance.PlaySound(SoundFXManager.Instance.Library.placement, 1.5f, 0.5f);
+
+        TowerCostManager.Instance?.RegisterTower(selectedPrefab);
 
         Destroy(previewObject);
         previewObject = null;

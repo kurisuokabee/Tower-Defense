@@ -20,30 +20,12 @@ public class PathPreview : MonoBehaviour
     {
         HidePaths();
 
-        if (previewMarkerPrefab == null)
-        {
-            Debug.LogError("PathPreview: Preview Marker Prefab is missing!", this);
-            return;
-        }
-
-        if (paths == null || paths.Length == 0)
-        {
-            Debug.LogWarning("PathPreview: No paths received.", this);
-            return;
-        }
-
         foreach (EnemyPath path in paths)
         {
             if (path == null)
                 continue;
 
             path.DrawPath();
-
-            if (path.PointCount < 2)
-            {
-                Debug.LogWarning("PathPreview: Path has fewer than 2 points.", path);
-                continue;
-            }
 
             activePaths.Add(path);
 
@@ -54,12 +36,6 @@ public class PathPreview : MonoBehaviour
             );
 
             markers.Add(marker);
-        }
-
-        if (activePaths.Count == 0)
-        {
-            Debug.LogWarning("PathPreview: No valid paths to preview.", this);
-            return;
         }
 
         IsPreviewing = true;

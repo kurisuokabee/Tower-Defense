@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
+
 
 public class TowerUpgradeUI : MonoBehaviour
 {
@@ -39,19 +41,29 @@ public class TowerUpgradeUI : MonoBehaviour
             return;
         }
 
+         if (!towerUpgrade.CanUpgrade)
+        {
+            upgradeCanvas.SetActive(false);
+            return;
+        }
+
         int cost = towerUpgrade.UpgradeCost;
         bool canAfford = CurrencyManager.Instance.CanAfford(cost);
 
         upgradeCanvas.SetActive(canAfford);
-        upgradeText.text = "Upgrade (" + cost + "G)";
+        upgradeText.text = cost.ToString();
     }
 
     private void TryUpgrade()
     {
-        if (towerUpgrade == null)
+        if (towerUpgrade == null || !towerUpgrade.CanUpgrade)
             return;
 
         if (towerUpgrade.Upgrade())
+        {
             UpdateUI(CurrencyManager.Instance.Gold);
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+            
     }
 }

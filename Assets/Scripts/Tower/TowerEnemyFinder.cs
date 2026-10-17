@@ -2,15 +2,19 @@ using UnityEngine;
 
 public class TowerEnemyFinder : MonoBehaviour
 {
+    public float AttackRange;
+
     public Enemy FindNearestEnemy(float searchRange)
     {   
-        EnemySpawner enemySpawner = EnemySpawner.Instance;
+        AttackRange = searchRange;
         
+        EnemySpawner enemySpawner = EnemySpawner.Instance;
         Enemy nearest = null;
-        float nearestDistance = searchRange;
 
+        float nearestDistanceSqr = searchRange * searchRange;
+       
         foreach (Enemy enemy in enemySpawner.ActiveEnemies)
-        {   
+        {
             if (enemy == null)
                 continue;
 
@@ -19,14 +23,12 @@ public class TowerEnemyFinder : MonoBehaviour
             if (enemyHP == null || !enemyHP.IsAlive)
                 continue;
 
-            float distance = Vector3.Distance(
-                transform.position,
-                enemy.transform.position
-            );
+            float distanceSqr =
+                (enemy.transform.position - transform.position).sqrMagnitude;
 
-            if (distance <= nearestDistance)
+            if (distanceSqr <= nearestDistanceSqr)
             {
-                nearestDistance = distance;
+                nearestDistanceSqr = distanceSqr;
                 nearest = enemy;
             }
         }

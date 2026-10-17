@@ -43,8 +43,10 @@ public class WaveManager : MonoBehaviour
                 );
             }
 
-            // Start the countdown only after the preview finishes.
+            // Start the countdown only after the path preview finishes.
             Countdown = timeBetweenWaves;
+
+            int previousSecond = Mathf.CeilToInt(Countdown);
 
             while (Countdown > 0f && !skipCountdown)
             {
@@ -52,6 +54,16 @@ public class WaveManager : MonoBehaviour
                     yield break;
 
                 Countdown -= Time.deltaTime;
+
+                int currentSecond = Mathf.CeilToInt(Countdown);
+
+                if (currentSecond < previousSecond && currentSecond > 0)
+                {
+                    SoundFXManager.Instance.PlaySound(SoundFXManager.Instance.Library.countdown, 0.8f);
+                }
+
+                previousSecond = currentSecond;
+
                 yield return null;
             }
 
@@ -60,6 +72,7 @@ public class WaveManager : MonoBehaviour
 
             yield return StartCoroutine(enemySpawner.SpawnWave(wave));
 
+    
             while (enemySpawner.ActiveEnemyCount > 0)
             {
                 if (gameEnded)
@@ -73,7 +86,8 @@ public class WaveManager : MonoBehaviour
         }
 
         if (!gameEnded)
-            Debug.Log("You Win!");
+            GameManager.Instance.WinGame();
+            
     }
 
     public void StartNextWave()

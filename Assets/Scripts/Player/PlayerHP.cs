@@ -20,10 +20,17 @@ public class PlayerBaseHP : MonoBehaviour, IHealth
         hpUI.UpdateHP();
         hpUI.UpdateGhostHP();
 
+        CameraShake cameraShake = Camera.main.GetComponent<CameraShake>();
+
+        if (cameraShake != null)
+            cameraShake.Shake();
+
+        SoundFXManager.Instance.PlaySound(SoundFXManager.Instance.Library.baseHit, 0.8f);    
+
         if(CurrentHP <= 0)
         {
-            Debug.Log("Scene Restart");
-            SceneManager.LoadScene("Gameplay");    
+            GameManager.Instance.LoseGame();  
+            
         }
     }
 }

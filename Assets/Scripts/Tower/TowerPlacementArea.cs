@@ -8,13 +8,8 @@ public class TowerPlacementArea : MonoBehaviour
 
     [Header("Restricted Areas")]
     [SerializeField] private RestrictedZone[] restrictedZones;
-
-    [System.Serializable]
-    public class RestrictedZone
-    {
-        public Vector2 center;
-        public Vector2 size = new Vector2(2f, 2f);
-    }
+    [SerializeField] private EnemyPath[] restrictedPaths;
+    [SerializeField] private float restrictedPathDistance = 1.5f;
 
     public bool Contains(Vector3 position)
     {
@@ -26,9 +21,17 @@ public class TowerPlacementArea : MonoBehaviour
 
         foreach (RestrictedZone zone in restrictedZones)
         {
-            if (Mathf.Abs(local.x - zone.center.x) <= zone.size.x / 2f &&
-                Mathf.Abs(local.y - zone.center.y) <= zone.size.y / 2f)
+            if (zone != null && zone.ContainsPoint(position))
                 return false;
+        }
+
+        foreach (EnemyPath path in restrictedPaths)
+        {
+            if (path != null &&
+                path.IsNearPath(position, restrictedPathDistance))
+            {
+                return false;
+            }
         }
 
         return true;
@@ -44,8 +47,5 @@ public class TowerPlacementArea : MonoBehaviour
         if (restrictedZones == null) return;
 
         Gizmos.color = Color.red;
-
-        foreach (RestrictedZone zone in restrictedZones)
-            Gizmos.DrawWireCube(zone.center, zone.size);
     }
 }
